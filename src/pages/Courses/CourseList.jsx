@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
+import CourseDetail from './CourseDetail';
 
 export default function CourseList() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState('Semua');
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -27,16 +29,21 @@ export default function CourseList() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <p className="text-zinc-500 font-medium animate-pulse">Memuat modul pembelajaran...</p>
+        <p className="text-zinc-500 font-medium animate-pulse">Memuat daftar kursus siswa dari cloud...</p>
       </div>
     );
+  }
+
+  // Jika ada kursus yang dipilih, tampilkan halaman detail
+  if (selectedCourse) {
+    return <CourseDetail course={selectedCourse} onBack={() => setSelectedCourse(null)} />;
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-10">
         <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Modul Belajar Siswa (SD - SMA)</h1>
-        <p className="text-zinc-600 mt-2 max-w-xl mx-auto">Pilih materi pelajaran berkualitas tinggi sesuai jenjang pendidikanmu.</p>
+        <p className="text-zinc-600 mt-2 max-w-xl mx-auto">Pilih materi pelajaran sesuai jenjang pendidikanmu dan klik untuk melihat detail lengkap.</p>
       </div>
 
       {/* Filter Jenjang */}
@@ -56,10 +63,14 @@ export default function CourseList() {
         ))}
       </div>
 
-      {/* Grid Kursus Responsif */}
+      {/* Grid Kursus Responsif & Klikable */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filteredCourses.map((course) => (
-          <div key={course.id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl border border-zinc-200/80 overflow-hidden flex flex-col justify-between transition-all duration-300 group">
+          <div 
+            key={course.id} 
+            onClick={() => setSelectedCourse(course)}
+            className="bg-white rounded-2xl shadow-sm hover:shadow-xl border border-zinc-200/80 overflow-hidden flex flex-col justify-between transition-all duration-300 group cursor-pointer"
+          >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
@@ -72,12 +83,9 @@ export default function CourseList() {
             </div>
             <div className="px-6 pb-6 pt-3 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50">
               <span className="font-bold text-indigo-600 text-sm">{course.price}</span>
-              <button 
-                onClick={() => alert(`Masuk ke materi: ${course.title}`)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm transition-all cursor-pointer"
-              >
-                Pelajari
-              </button>
+              <span className="text-indigo-600 text-sm font-semibold group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                Lihat Detail &rarr;
+              </span>
             </div>
           </div>
         ))}
