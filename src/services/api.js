@@ -5,10 +5,10 @@ export const apiService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve([
-          { id: 1, title: 'Matematika Dasar UTBK', category: 'Saintek', instructor: 'Budi Santoso, M.Pd', price: 'Gratis', rating: 4.8 },
-          { id: 2, title: 'Fisika Kuantum & Mekanika', category: 'Saintek', instructor: 'Dr. Siti Aminah', price: 'Premium', rating: 4.9 },
-          { id: 3, title: 'Bahasa Inggris Intensif', category: 'Soshum', instructor: 'John Doe, B.A.', price: 'Gratis', rating: 4.7 },
-          { id: 4, title: 'Ekonomi & Akuntansi Dasar', category: 'Soshum', instructor: 'Rina Marlina, S.E.', price: 'Premium', rating: 4.6 }
+          { id: 1, title: 'Matematika Kelas 6 SD', category: 'SD', instructor: 'Budi Santoso, M.Pd', price: 'Gratis', rating: 4.8 },
+          { id: 2, title: 'IPA Terpadu Kelas 9 SMP', category: 'SMP', instructor: 'Dr. Siti Aminah', price: 'Gratis', rating: 4.9 },
+          { id: 3, title: 'Matematika Dasar UTBK / SMA', category: 'SMA', instructor: 'John Doe, B.A.', price: 'Premium', rating: 4.7 },
+          { id: 4, title: 'Fisika Kuantum & Mekanika SMA', category: 'SMA', instructor: 'Rina Marlina, S.E.', price: 'Premium', rating: 4.6 }
         ]);
       }, 400);
     });
@@ -27,14 +27,52 @@ export const apiService = {
   },
 
   async getDashboardData() {
-    // Simulasi pengambilan data statistik siswa dari database cloud (Neon)
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          completedCourses: 12,
-          averageScore: 87.5,
+          studentName: 'Ahmad Siswa',
+          schoolLevel: 'SMA Kelas 12',
+          completedCourses: 5,
+          averageScore: 88.0,
           upcomingExams: 2,
-          lastActivity: 'Matematika Dasar UTBK'
+          lastActivity: 'Matematika Dasar UTBK / SMA'
+        });
+      }, 500);
+    });
+  },
+
+  async getMentorDashboardData() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          mentorName: 'Budi Santoso, M.Pd',
+          totalActiveClasses: 3,
+          totalStudents: 145,
+          averageStudentRating: 4.8,
+          activeClasses: [
+            { id: 101, title: 'Matematika Kelas 6 SD - Reguler', schedule: 'Senin, 15:00 WIB', studentsEnrolled: 45 },
+            { id: 102, title: 'Persiapan Olimpiade Sains SD', schedule: 'Rabu, 16:30 WIB', studentsEnrolled: 20 },
+            { id: 103, title: 'Matematika Dasar UTBK / SMA', schedule: 'Sabtu, 10:00 WIB', studentsEnrolled: 80 }
+          ]
+        });
+      }, 500);
+    });
+  },
+
+  async getAdminDashboardData() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          adminName: 'Admin Utama (Owner)',
+          totalStudents: 1250,
+          totalMentors: 42,
+          totalRevenue: 'Rp 125.400.000',
+          systemStatus: 'Optimal (Cloud Neon DB Connected)',
+          recentActivities: [
+            { id: 1, text: 'Pendaftaran mentor baru: Dr. Hendra, M.Sc', time: '10 menit lalu' },
+            { id: 2, text: 'Tryout serentak SD-SMA gelombang 2 dimulai', time: '1 jam lalu' },
+            { id: 3, text: 'Backup database cloud berhasil dilakukan', time: '5 jam lalu' }
+          ]
         });
       }, 500);
     });
