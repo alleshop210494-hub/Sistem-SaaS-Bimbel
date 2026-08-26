@@ -36,11 +36,10 @@ export default async function handler(req, res) {
   
       const secretKey = process.env.CLERK_SECRET_KEY;
       if (!secretKey) {
-        console.error('CLERK_SECRET_KEY tidak ditemukan di environment Vercel.');
-        return res.status(500).json({ error: 'Konfigurasi server error: CLERK_SECRET_KEY kosong' });
+        return res.status(500).json({ error: 'CLERK_SECRET_KEY tidak ditemukan di environment Vercel.' });
       }
   
-      // Mengirim request langsung ke Clerk Backend API via fetch standar
+      // Mengirim request ke Clerk Backend API menggunakan struktur parameter terbaru
       const clerkResponse = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
         method: 'PATCH',
         headers: {
@@ -57,11 +56,25 @@ export default async function handler(req, res) {
       const clerkData = await clerkResponse.json();
   
       if (!clerkResponse.ok) {
-        console.error('Clerk API Error Response:', clerkData);
-        return res.status(clerkResponse.status).json({ 
-          error: 'Gagal memperbarui role di Clerk', 
-          details: clerkData 
+        // Jika masih menolak public_metadata langsung, kita coba fallback ke publicMetadata
+        const fallbackResponse = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${secretKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            public_metadata: JSON.stringify({ role: role })
+          }),
         });
+  
+        const fallbackData = await fallbackResponse.json();
+        if (!fallbackResponse.ok) {
+          console.error('Clerk API Error:', fallbackData);
+          return res.status(fallbackResponse.status).json({ error: 'Gagal memperbarui role di Clerk', details: fallbackData });
+        }
+  
+        return res.status(200).json({ message: 'Role berhasil diperbarui via fallback', data: fallbackData });
       }
   
       return res.status(200).json({ message: 'Role berhasil diperbarui di server', data: clerkData });
