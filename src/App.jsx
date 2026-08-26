@@ -1,4 +1,4 @@
-// src/App.jsx - Full Combined Code with Interactive Admin Sidebar Tabs
+// src/App.jsx - Full Combined Code
 import React, { useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 
@@ -255,23 +255,7 @@ export default function App() {
 
               <main className="flex-1 overflow-y-auto bg-zinc-950 p-4 sm:p-8">
                 <div className="max-w-7xl mx-auto">
-                  {userRole === 'admin' && (
-                    <>
-                      {adminTab === 'dashboard' && <AdminDashboard tenantId={tenantId} />}
-                      {adminTab === 'manage' && (
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
-                          <h2 className="text-xl font-bold text-white mb-2">Kelola Guru, Murid & Kelas</h2>
-                          <p className="text-zinc-400 text-sm">Panel manajemen data master guru, pendaftaran murid, serta pengaturan kelas bimbingan.</p>
-                        </div>
-                      )}
-                      {adminTab === 'settings' && (
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
-                          <h2 className="text-xl font-bold text-white mb-2">Pengaturan SPP & Data</h2>
-                          <p className="text-zinc-400 text-sm">Panel konfigurasi tarif pembayaran SPP bulanan, pencatatan transaksi, dan pengelolaan database.</p>
-                        </div>
-                      )}
-                    </>
-                  )}
+                  {userRole === 'admin' && <AdminDashboard tenantId={tenantId} activeTab={adminTab} />}
                   {userRole === 'student' && <Dashboard tenantId={tenantId} />}
                   {userRole === 'parent' && <ParentDashboard tenantId={tenantId} />}
                   {userRole === 'teacher' && <TeacherDashboard tenantId={tenantId} />}
