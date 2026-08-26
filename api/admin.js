@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-tenant-id'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-tenant-id, x-user-role'
   );
 
   if (req.method === 'OPTIONS') {
@@ -15,6 +15,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Validasi Keamanan RBAC di Backend: Memeriksa header role dari klien/token
+    const userRole = req.headers['x-user-role'] || 'student';
+    
+    // Jika bukan admin, blokir akses ke API admin ini
+    if (userRole !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Akses ditolak. Endpoint ini khusus untuk Admin / Pemilik Bimbel.' 
+      });
+    }
+
     const sql = neon(process.env.DATABASE_URL);
     const tenantId = req.headers['x-tenant-id'] || 'default-bimbel';
 
