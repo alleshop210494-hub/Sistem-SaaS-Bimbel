@@ -1,4 +1,4 @@
-// src/App.jsx - Full Combined Code with Secure Backend Role Update & Role-Based Access Control
+// src/App.jsx - Full Combined Code with Interactive Admin Sidebar Tabs
 import React, { useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 
@@ -12,6 +12,9 @@ export default function App() {
   const [tenantId, setTenantId] = useState('bimbel-nusantara');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  
+  // State untuk mengontrol tab aktif khusus Admin
+  const [adminTab, setAdminTab] = useState('dashboard');
 
   const userRole = user?.publicMetadata?.role;
 
@@ -144,57 +147,71 @@ export default function App() {
 
                 {userRole === 'student' && (
                   <div className="space-y-1">
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-indigo-600">
+                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-indigo-600 text-left cursor-pointer">
                       <span>🎓</span>
                       <span className={`${!sidebarOpen && 'md:hidden'}`}>Dashboard Murid</span>
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
-                      <span>📚</span>
-                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Materi & Tugas Saya</span>
-                    </div>
+                    </button>
                   </div>
                 )}
 
                 {userRole === 'parent' && (
                   <div className="space-y-1">
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-emerald-600">
+                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-emerald-600 text-left cursor-pointer">
                       <span>👨‍👩‍👦</span>
                       <span className={`${!sidebarOpen && 'md:hidden'}`}>Portal Orang Tua</span>
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
-                      <span>💳</span>
-                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Riwayat SPP & Tagihan</span>
-                    </div>
+                    </button>
                   </div>
                 )}
 
                 {userRole === 'teacher' && (
                   <div className="space-y-1">
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-amber-600">
+                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-amber-600 text-left cursor-pointer">
                       <span>👨‍🏫</span>
                       <span className={`${!sidebarOpen && 'md:hidden'}`}>Portal Guru / Mentor</span>
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
-                      <span>📝</span>
-                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Input Nilai & Absensi</span>
-                    </div>
+                    </button>
                   </div>
                 )}
 
                 {userRole === 'admin' && (
                   <div className="space-y-1">
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-purple-600">
+                    {/* Tab Admin Utama */}
+                    <button 
+                      onClick={() => setAdminTab('dashboard')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-left transition-all cursor-pointer ${
+                        adminTab === 'dashboard' 
+                          ? 'bg-purple-600 text-white shadow-md' 
+                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                      }`}
+                    >
                       <span>🛡️</span>
                       <span className={`${!sidebarOpen && 'md:hidden'}`}>Admin Utama</span>
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
+                    </button>
+
+                    {/* Tab Kelola Guru, Murid & Kelas */}
+                    <button 
+                      onClick={() => setAdminTab('manage')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-left transition-all cursor-pointer ${
+                        adminTab === 'manage' 
+                          ? 'bg-purple-600 text-white shadow-md' 
+                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                      }`}
+                    >
                       <span>⚙️</span>
                       <span className={`${!sidebarOpen && 'md:hidden'}`}>Kelola Guru, Murid & Kelas</span>
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
+                    </button>
+
+                    {/* Tab Pengaturan SPP & Data */}
+                    <button 
+                      onClick={() => setAdminTab('settings')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-left transition-all cursor-pointer ${
+                        adminTab === 'settings' 
+                          ? 'bg-purple-600 text-white shadow-md' 
+                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                      }`}
+                    >
                       <span>💰</span>
                       <span className={`${!sidebarOpen && 'md:hidden'}`}>Pengaturan SPP & Data</span>
-                    </div>
+                    </button>
                   </div>
                 )}
               </div>
@@ -224,7 +241,7 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase">
-                      Workspace: {userRole.toUpperCase()}
+                      Workspace: {userRole.toUpperCase()} {userRole === 'admin' ? `(${adminTab})` : ''}
                     </span>
                   </div>
                 </div>
@@ -238,7 +255,23 @@ export default function App() {
 
               <main className="flex-1 overflow-y-auto bg-zinc-950 p-4 sm:p-8">
                 <div className="max-w-7xl mx-auto">
-                  {userRole === 'admin' && <AdminDashboard tenantId={tenantId} />}
+                  {userRole === 'admin' && (
+                    <>
+                      {adminTab === 'dashboard' && <AdminDashboard tenantId={tenantId} />}
+                      {adminTab === 'manage' && (
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+                          <h2 className="text-xl font-bold text-white mb-2">Kelola Guru, Murid & Kelas</h2>
+                          <p className="text-zinc-400 text-sm">Panel manajemen data master guru, pendaftaran murid, serta pengaturan kelas bimbingan.</p>
+                        </div>
+                      )}
+                      {adminTab === 'settings' && (
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+                          <h2 className="text-xl font-bold text-white mb-2">Pengaturan SPP & Data</h2>
+                          <p className="text-zinc-400 text-sm">Panel konfigurasi tarif pembayaran SPP bulanan, pencatatan transaksi, dan pengelolaan database.</p>
+                        </div>
+                      )}
+                    </>
+                  )}
                   {userRole === 'student' && <Dashboard tenantId={tenantId} />}
                   {userRole === 'parent' && <ParentDashboard tenantId={tenantId} />}
                   {userRole === 'teacher' && <TeacherDashboard tenantId={tenantId} />}
