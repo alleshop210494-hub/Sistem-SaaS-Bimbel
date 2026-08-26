@@ -1,4 +1,4 @@
-// src/pages/Dashboard/AdminDashboard.jsx - Full Combined Code with Interactive Finance & Salary Management
+// src/pages/Dashboard/AdminDashboard.jsx - Full Code with Fixed Input Text Color
 import React, { useState, useEffect } from 'react';
 
 export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
@@ -61,7 +61,6 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
     }
   };
 
-  // Handler simpan data SPP Murid
   const handleAddSpp = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -88,7 +87,6 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
     }
   };
 
-  // Handler simpan data Gaji Guru
   const handleAddSalary = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -216,7 +214,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                   placeholder="Contoh: Matematika UTBK SMA"
                   value={classForm.title}
                   onChange={(e) => setClassForm({ ...classForm, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                 />
               </div>
               <div>
@@ -224,7 +222,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                 <select 
                   value={classForm.category}
                   onChange={(e) => setClassForm({ ...classForm, category: e.target.value })}
-                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white"
+                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white text-zinc-900"
                 >
                   <option value="SD">SD</option>
                   <option value="SMP">SMP</option>
@@ -239,7 +237,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                   placeholder="Contoh: Budi Santoso, M.Pd"
                   value={classForm.instructor}
                   onChange={(e) => setClassForm({ ...classForm, instructor: e.target.value })}
-                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                 />
               </div>
               <div>
@@ -250,7 +248,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                   placeholder="Contoh: Rp 250.000 atau Gratis"
                   value={classForm.price}
                   onChange={(e) => setClassForm({ ...classForm, price: e.target.value })}
-                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                 />
               </div>
               <button 
@@ -338,7 +336,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                     placeholder="Contoh: Ahmad Fauzan"
                     value={sppForm.studentName}
                     onChange={(e) => setSppForm({ ...sppForm, studentName: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                   />
                 </div>
                 <div>
@@ -348,7 +346,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                     required
                     value={sppForm.month}
                     onChange={(e) => setSppForm({ ...sppForm, month: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                   />
                 </div>
                 <div>
@@ -359,7 +357,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                     placeholder="Contoh: 350.000"
                     value={sppForm.amount}
                     onChange={(e) => setSppForm({ ...sppForm, amount: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                   />
                 </div>
                 <div>
@@ -367,7 +365,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                   <select 
                     value={sppForm.status}
                     onChange={(e) => setSppForm({ ...sppForm, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white"
+                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white text-zinc-900"
                   >
                     <option value="Lunas">Lunas</option>
                     <option value="Pending">Pending (Belum Lunas)</option>
@@ -397,7 +395,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                     placeholder="Contoh: Budi Santoso, M.Pd"
                     value={salaryForm.teacherName}
                     onChange={(e) => setSalaryForm({ ...salaryForm, teacherName: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                   />
                 </div>
                 <div>
@@ -407,7 +405,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                     required
                     value={salaryForm.month}
                     onChange={(e) => setSalaryForm({ ...salaryForm, month: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                   />
                 </div>
                 <div>
@@ -418,7 +416,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                     placeholder="Contoh: 3.500.000"
                     value={salaryForm.amount}
                     onChange={(e) => setSalaryForm({ ...salaryForm, amount: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                   />
                 </div>
                 <div>
@@ -426,7 +424,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                   <select 
                     value={salaryForm.status}
                     onChange={(e) => setSalaryForm({ ...salaryForm, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white"
+                    className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white text-zinc-900"
                   >
                     <option value="Paid">Sudah Dibayar (Paid)</option>
                     <option value="Pending">Pending (Belum Dicairkan)</option>
