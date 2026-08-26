@@ -1,4 +1,4 @@
-// src/App.jsx - Full Combined Code
+// src/App.jsx - Full Combined Code with Native AdminDashboard
 import React, { useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 
@@ -12,9 +12,6 @@ export default function App() {
   const [tenantId, setTenantId] = useState('bimbel-nusantara');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  
-  // State untuk mengontrol tab aktif khusus Admin
-  const [adminTab, setAdminTab] = useState('dashboard');
 
   const userRole = user?.publicMetadata?.role;
 
@@ -174,43 +171,9 @@ export default function App() {
 
                 {userRole === 'admin' && (
                   <div className="space-y-1">
-                    {/* Tab Admin Utama */}
-                    <button 
-                      onClick={() => setAdminTab('dashboard')}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-left transition-all cursor-pointer ${
-                        adminTab === 'dashboard' 
-                          ? 'bg-purple-600 text-white shadow-md' 
-                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
-                      }`}
-                    >
+                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-purple-600 text-left cursor-pointer shadow-md">
                       <span>🛡️</span>
-                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Admin Utama</span>
-                    </button>
-
-                    {/* Tab Kelola Guru, Murid & Kelas */}
-                    <button 
-                      onClick={() => setAdminTab('manage')}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-left transition-all cursor-pointer ${
-                        adminTab === 'manage' 
-                          ? 'bg-purple-600 text-white shadow-md' 
-                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
-                      }`}
-                    >
-                      <span>⚙️</span>
-                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Kelola Guru, Murid & Kelas</span>
-                    </button>
-
-                    {/* Tab Pengaturan SPP & Data */}
-                    <button 
-                      onClick={() => setAdminTab('settings')}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-left transition-all cursor-pointer ${
-                        adminTab === 'settings' 
-                          ? 'bg-purple-600 text-white shadow-md' 
-                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
-                      }`}
-                    >
-                      <span>💰</span>
-                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Pengaturan SPP & Data</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Dashboard Admin Utama</span>
                     </button>
                   </div>
                 )}
@@ -241,7 +204,7 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase">
-                      Workspace: {userRole.toUpperCase()} {userRole === 'admin' ? `(${adminTab})` : ''}
+                      Workspace: {userRole.toUpperCase()}
                     </span>
                   </div>
                 </div>
@@ -255,7 +218,7 @@ export default function App() {
 
               <main className="flex-1 overflow-y-auto bg-zinc-950 p-4 sm:p-8">
                 <div className="max-w-7xl mx-auto">
-                  {userRole === 'admin' && <AdminDashboard tenantId={tenantId} activeTab={adminTab} />}
+                  {userRole === 'admin' && <AdminDashboard tenantId={tenantId} />}
                   {userRole === 'student' && <Dashboard tenantId={tenantId} />}
                   {userRole === 'parent' && <ParentDashboard tenantId={tenantId} />}
                   {userRole === 'teacher' && <TeacherDashboard tenantId={tenantId} />}
