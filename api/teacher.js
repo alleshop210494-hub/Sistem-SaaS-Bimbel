@@ -1,62 +1,56 @@
-import { neon } from '@neondatabase/serverless';
+import { Pool } from '@neondatabase/serverless';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-tenant-id'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  const tenantId = req.headers['x-tenant-id'] || 'bimbel-nusantara';
 
   try {
-    const sql = neon(process.env.DATABASE_URL);
-    const tenantId = req.headers['x-tenant-id'] || 'default-bimbel';
-
-    if (req.method === 'GET') {
-      const courses = await sql`
-        SELECT * FROM courses 
-        WHERE tenant_id = ${tenantId} 
-        ORDER BY id ASC
-      `;
-
-      return res.status(200).json({
-        teacherName: 'Budi Santoso, M.Pd',
-        teacherSubject: 'Matematika & Saintek',
-        totalActiveClasses: 3,
-        totalStudentsEnrolled: 145,
-        averageTeacherRating: '4.8',
-        teachingSchedules: [
-          { id: 1, className: 'Matematika Dasar UTBK / SMA', time: 'Senin, 15:00 WIB', room: 'Zoom Sesi 1', studentsCount: 45 },
-          { id: 2, className: 'Matematika Kelas 6 SD - Reguler', time: 'Selasa, 14:00 WIB', room: 'Ruang Kelas 1A', studentsCount: 30 },
-          { id: 3, className: 'Olimpiade Matematika SMP', time: 'Kamis, 16:00 WIB', room: 'Zoom Sesi 2', studentsCount: 70 }
-        ],
-        studentsToAttend: [
-          { id: 101, name: 'Ahmad Fauzan', school: 'SMA Kelas 12', status: 'Hadir' },
-          { id: 102, name: 'Siti Rahma', school: 'SMA Kelas 12', status: 'Hadir' },
-          { id: 103, name: 'Budi Pratama', school: 'SMA Kelas 12', status: 'Izin' }
-        ],
-        courses: courses
-      });
-    }
-
-    if (req.method === 'POST') {
-      const { action, studentId, status } = req.body;
-      if (action === 'update_attendance') {
-        // Logika pembaruan absensi ke database Neon
-        return res.status(200).json({ message: 'Absensi siswa berhasil diperbarui di database Neon', studentId, status });
-      }
-      return res.status(400).json({ error: 'Aksi tidak dikenali' });
-    }
-
-    return res.status(405).json({ error: 'Method not allowed' });
-  } catch (error) {
-    console.error('Teacher API Error:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS teachers (
+        id SERIAL PRIMARY KEY,
+        tenant_id VARCHAR(100),
+        name VARCHAR(255),
+        subject VARCHAR(100),
+        status VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  } catch (err) {
+    console.error('Gagal inisialisasi tabel teachers:', err);
   }
+
+  if (req.method === 'GET') {
+    try {
+      const result = await pool.query(
+        'SELECT id, name, subject, status FROM teachers WHERE tenant_id = $1 ORDER BY id DESC',
+        [tenantId]
+      );
+      return res.status(200).json({
+        totalTeachers: result.rows.length,
+        teachers: result.rows
+      });
+    } catch (error) {
+      return res.status(500).json({ error: 'Gagal mengambil data guru dari Neon' });
+    }
+  }
+
+  if (req.method === 'POST') {
+    const { name, subject, status } = req.body;
+    try {
+      await pool.query(
+        'INSERT INTO teachers (tenant_id, name, subject, status) VALUES ($1, $2, $3, $4)',
+        [tenantId, name, subject, status || 'Aktif']
+      );
+      const result = await pool.query(
+        'SELECT id, name, subject, status FROM teachers WHERE tenant_id = $1 ORDER BY id DESC',
+        [tenantId]
+      );
+      return res.status(200).json({ message: 'Guru berhasil ditambahkan', teachers: result.rows });
+    } catch (error) {
+      return res.status(500).json({ error: 'Gagal menyimpan data guru' });
+    }
+  }
+
+  return res.status(405).end();
 }

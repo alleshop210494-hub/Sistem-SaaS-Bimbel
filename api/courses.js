@@ -1,48 +1,55 @@
-import { neon } from '@neondatabase/serverless';
+import { Pool } from '@neondatabase/serverless';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export default async function handler(req, res) {
-  // Set header CORS untuk keamanan akses API
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-tenant-id'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  const tenantId = req.headers['x-tenant-id'] || 'bimbel-nusantara';
 
   try {
-    const sql = neon(process.env.DATABASE_URL);
-    
-    // Isolasi tenant berdasarkan header yang dikirim frontend (berasal dari Clerk Organization ID)
-    const tenantId = req.headers['x-tenant-id'] || 'default-bimbel';
-
-    if (req.method === 'GET') {
-      const courses = await sql`
-        SELECT * FROM courses 
-        WHERE tenant_id = ${tenantId} 
-        ORDER BY id ASC
-      `;
-      return res.status(200).json(courses);
-    }
-
-    if (req.method === 'POST') {
-      const { title, category, instructor, price } = req.body;
-      const newCourse = await sql`
-        INSERT INTO courses (tenant_id, title, category, instructor, price)
-        VALUES (${tenantId}, ${title}, ${category}, ${instructor}, ${price})
-        RETURNING *
-      `;
-      return res.status(201).json(newCourse[0]);
-    }
-
-    return res.status(405).json({ error: 'Method not allowed' });
-  } catch (error) {
-    console.error('Serverless Database Error:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS courses (
+        id SERIAL PRIMARY KEY,
+        tenant_id VARCHAR(100),
+        title VARCHAR(255),
+        description TEXT,
+        instructor VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  } catch (err) {
+    console.error('Gagal inisialisasi tabel courses:', err);
   }
+
+  if (req.method === 'GET') {
+    try {
+      const result = await pool.query(
+        'SELECT id, title, description, instructor FROM courses WHERE tenant_id = $1 ORDER BY id DESC',
+        [tenantId]
+      );
+      return res.status(200).json({
+        courses: result.rows
+      });
+    } catch (error) {
+      return res.status(500).json({ error: 'Gagal mengambil data kursus dari Neon' });
+    }
+  }
+
+  if (req.method === 'POST') {
+    const { title, description, instructor } = req.body;
+    try {
+      await pool.query(
+        'INSERT INTO courses (tenant_id, title, description, instructor) VALUES ($1, $2, $3, $4)',
+        [tenantId, title, description, instructor]
+      );
+      const result = await pool.query(
+        'SELECT id, title, description, instructor FROM courses WHERE tenant_id = $1 ORDER BY id DESC',
+        [tenantId]
+      );
+      return res.status(200).json({ message: 'Kursus berhasil ditambahkan', courses: result.rows });
+    } catch (error) {
+      return res.status(500).json({ error: 'Gagal menyimpan data kursus' });
+    }
+  }
+
+  return res.status(405).end();
 }
