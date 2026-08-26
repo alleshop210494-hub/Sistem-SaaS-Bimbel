@@ -1,8 +1,7 @@
-// src/App.jsx - Full Combined Code with Interactive Role Onboarding for New Sign-Ups
+// src/App.jsx - Full Combined Code with Secure Backend Role Update
 import React, { useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 
-// Impor komponen dashboard untuk masing-masing role
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import Dashboard from './pages/Dashboard/Dashboard';
 import ParentDashboard from './pages/Dashboard/ParentDashboard';
@@ -14,19 +13,29 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Mengambil role dari Clerk publicMetadata
   const userRole = user?.publicMetadata?.role;
 
-  // Fungsi untuk menyimpan pilihan peran pendaftar baru secara dinamis
+  // Fungsi untuk mengirim permintaan simpan role secara aman melalui backend API
   const handleSelectRole = async (selectedRole) => {
     try {
       setIsUpdating(true);
-      await user.update({
-        publicMetadata: {
-          role: selectedRole
-        }
+      
+      const response = await fetch('/api/update-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          role: selectedRole,
+        }),
       });
-      // Muat ulang halaman agar sistem membaca metadata role terbaru
+
+      if (!response.ok) {
+        throw new Error('Gagal menyimpan role ke server');
+      }
+
+      // Muat ulang halaman agar sesi/metadata terbaru terbaca oleh Clerk
       window.location.reload();
     } catch (error) {
       console.error("Gagal menyimpan role:", error);
@@ -37,7 +46,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
       
-      {/* 1. STATE BELUM LOGIN (Landing Page Auth) */}
+      {/* 1. STATE BELUM LOGIN */}
       <SignedOut>
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-xl mx-auto">
           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl font-extrabold shadow-lg shadow-indigo-500/30 mb-6 text-white">
@@ -59,8 +68,8 @@ export default function App() {
 
       {/* 2. STATE SUDAH LOGIN */}
       <SignedIn>
-        {/* JIKA PENGGUNA BARU BELUM MEMILIH PERAN (Tampilkan Layar Onboarding) */}
         {!userRole ? (
+          /* LAYAR ONBOARDING PEMILIHAN PERAN */
           <div className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
             <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl text-center">
               <div className="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4">
@@ -98,15 +107,14 @@ export default function App() {
               </div>
 
               {isUpdating && (
-                <p className="text-xs text-indigo-400 mt-4 animate-pulse">Menyimpan pilihan peran Anda ke sistem...</p>
+                <p className="text-xs text-indigo-400 mt-4 animate-pulse">Menyimpan pilihan peran Anda ke server...</p>
               )}
             </div>
           </div>
         ) : (
-          /* JIKA ROLE SUDAH ADA (Tampilkan Dashboard Workspace Sesuai Peran) */
+          /* DASHBOARD UTAMA SESUAI PERAN */
           <div className="flex h-screen overflow-hidden bg-zinc-900">
             
-            {/* SIDEBAR NAVIGATION */}
             <aside className={`w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col transition-all duration-300 z-20 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-20'}`}>
               
               <div className="p-4 border-b border-zinc-800/80 flex items-center justify-between">
@@ -166,7 +174,6 @@ export default function App() {
               </div>
             </aside>
 
-            {/* MAIN CONTENT AREA */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-zinc-950">
               
               <header className="h-16 bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800 flex items-center justify-between px-6 z-10">
