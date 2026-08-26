@@ -1,4 +1,4 @@
-// src/App.jsx - Full Combined Code with Secure Backend Role Update
+// src/App.jsx - Full Combined Code with Secure Backend Role Update & Role-Based Access Control
 import React, { useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 
@@ -77,7 +77,7 @@ export default function App() {
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Selamat Datang di Bimbel Hub!</h2>
               <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
-                Silakan pilih peran atau status Anda di dalam sistem agar kami dapat menyiapkan halaman yang tepat untuk Anda:
+                Silakan pilih peran atau status Anda di dalam sistem agar kami dapat menyiapkan halaman dan hak akses input data yang tepat:
               </p>
 
               <div className="space-y-3">
@@ -104,6 +104,14 @@ export default function App() {
                 >
                   <span>👨‍🏫</span> Saya sebagai Guru / Mentor
                 </button>
+
+                <button
+                  disabled={isUpdating}
+                  onClick={() => handleSelectRole('admin')}
+                  className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50"
+                >
+                  <span>🛡️</span> Saya sebagai Admin
+                </button>
               </div>
 
               {isUpdating && (
@@ -129,36 +137,64 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-1">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 <p className={`text-[10px] uppercase tracking-wider font-bold text-zinc-400 mb-2 px-2 ${!sidebarOpen && 'md:hidden'}`}>
-                  Menu Utama ({userRole.toUpperCase()})
+                  Menu Navigasi ({userRole.toUpperCase()})
                 </p>
 
                 {userRole === 'student' && (
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-indigo-600">
-                    <span>🎓</span>
-                    <span className={`${!sidebarOpen && 'md:hidden'}`}>Dashboard Murid</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-indigo-600">
+                      <span>🎓</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Dashboard Murid</span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
+                      <span>📚</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Materi & Tugas Saya</span>
+                    </div>
                   </div>
                 )}
 
                 {userRole === 'parent' && (
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-emerald-600">
-                    <span>👨‍👩‍👦</span>
-                    <span className={`${!sidebarOpen && 'md:hidden'}`}>Portal Orang Tua</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-emerald-600">
+                      <span>👨‍👩‍👦</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Portal Orang Tua</span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
+                      <span>💳</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Riwayat SPP & Tagihan</span>
+                    </div>
                   </div>
                 )}
 
                 {userRole === 'teacher' && (
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-amber-600">
-                    <span>👨‍🏫</span>
-                    <span className={`${!sidebarOpen && 'md:hidden'}`}>Portal Guru / Mentor</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-amber-600">
+                      <span>👨‍🏫</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Portal Guru / Mentor</span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
+                      <span>📝</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Input Nilai & Absensi</span>
+                    </div>
                   </div>
                 )}
 
                 {userRole === 'admin' && (
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-zinc-800 border border-zinc-700">
-                    <span>⚙️</span>
-                    <span className={`${!sidebarOpen && 'md:hidden'}`}>Admin & Semua Data</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white bg-purple-600">
+                      <span>🛡️</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Admin Utama</span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
+                      <span>⚙️</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Kelola Guru, Murid & Kelas</span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-all">
+                      <span>💰</span>
+                      <span className={`${!sidebarOpen && 'md:hidden'}`}>Pengaturan SPP & Data</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -188,7 +224,7 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase">
-                      Akses Aktif: {userRole.toUpperCase()} Workspace
+                      Workspace: {userRole.toUpperCase()}
                     </span>
                   </div>
                 </div>
