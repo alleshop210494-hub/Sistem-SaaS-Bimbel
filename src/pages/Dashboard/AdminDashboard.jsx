@@ -1,4 +1,4 @@
-// src/pages/Dashboard/AdminDashboard.jsx - Full Code with Fixed Input Text Color
+// src/pages/Dashboard/AdminDashboard.jsx - Full Code with Zoom Link Support
 import React, { useState, useEffect } from 'react';
 
 export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
@@ -6,8 +6,8 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // overview, classes, attendance, finance
   
-  // Form input kelas baru
-  const [classForm, setClassForm] = useState({ title: '', category: 'SD', instructor: '', price: '' });
+  // Form input kelas baru (ditambah zoomLink)
+  const [classForm, setClassForm] = useState({ title: '', category: 'SD', instructor: '', price: '', zoomLink: '' });
   
   // Form input SPP Murid
   const [sppForm, setSppForm] = useState({ studentName: '', month: 'Februari 2026', amount: '', status: 'Lunas' });
@@ -48,8 +48,8 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
         body: JSON.stringify({ action: 'add_class', ...classForm })
       });
       if (res.ok) {
-        alert('Kelas berhasil ditambahkan ke database Neon!');
-        setClassForm({ title: '', category: 'SD', instructor: '', price: '' });
+        alert('Kelas & Link Zoom berhasil disimpan ke database!');
+        setClassForm({ title: '', category: 'SD', instructor: '', price: '', zoomLink: '' });
         fetchAdminData();
       } else {
         alert('Gagal menambahkan kelas.');
@@ -139,7 +139,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
       <div className="flex gap-2 mb-8 border-b border-zinc-200 pb-4 overflow-x-auto">
         {[
           { id: 'overview', label: 'Ringkasan Statistik' },
-          { id: 'classes', label: 'Manajemen Kelas' },
+          { id: 'classes', label: 'Manajemen Kelas & Zoom' },
           { id: 'attendance', label: 'Absensi Terpusat' },
           { id: 'finance', label: 'SPP & Gaji Guru' }
         ].map(tab => (
@@ -199,12 +199,12 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
         </div>
       )}
 
-      {/* Tab Content: Classes (Input Kelas) */}
+      {/* Tab Content: Classes & Zoom Management */}
       {activeTab === 'classes' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Form Input Kelas */}
+          {/* Form Input Kelas & Zoom */}
           <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm h-fit">
-            <h3 className="text-lg font-bold text-zinc-900 mb-4">Input Kelas Bimbel Baru</h3>
+            <h3 className="text-lg font-bold text-zinc-900 mb-4">Input Kelas & Link Zoom</h3>
             <form onSubmit={handleAddClass} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1">Nama Mata Pelajaran / Kelas</label>
@@ -251,19 +251,31 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                   className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">Link Zoom Meeting (URL)</label>
+                <input 
+                  type="url" 
+                  required
+                  placeholder="https://zoom.us/j/contoh12345"
+                  value={classForm.zoomLink}
+                  onChange={(e) => setClassForm({ ...classForm, zoomLink: e.target.value })}
+                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-zinc-900 placeholder:text-zinc-400 bg-white"
+                />
+                <p className="text-[11px] text-zinc-400 mt-1">Link ini akan otomatis menjadi tombol 'Masuk Kelas' di portal siswa.</p>
+              </div>
               <button 
                 type="submit" 
                 disabled={submitting}
                 className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
               >
-                {submitting ? 'Menyimpan ke Database...' : 'Simpan & Tambah Kelas'}
+                {submitting ? 'Menyimpan ke Database...' : 'Simpan Kelas & Link Zoom'}
               </button>
             </form>
           </div>
 
-          {/* Daftar Kelas di Database */}
+          {/* Daftar Kelas & Link Zoom di Database */}
           <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-            <h3 className="text-lg font-bold text-zinc-900 mb-4">Daftar Kelas Terdaftar di Tenant Ini</h3>
+            <h3 className="text-lg font-bold text-zinc-900 mb-4">Daftar Kelas & Status Link Zoom</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -271,7 +283,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                     <th className="py-3 px-4">Judul Kelas</th>
                     <th className="py-3 px-4">Jenjang</th>
                     <th className="py-3 px-4">Mentor</th>
-                    <th className="py-3 px-4">Harga</th>
+                    <th className="py-3 px-4">Link Zoom</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 text-sm">
@@ -285,7 +297,21 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-zinc-600">{cls.instructor}</td>
-                        <td className="py-3 px-4 font-bold text-indigo-600">{cls.price}</td>
+                        <td className="py-3 px-4">
+                          {cls.zoomLink ? (
+                            <a 
+                              href={cls.zoomLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-all inline-block truncate max-w-[150px]"
+                              title={cls.zoomLink}
+                            >
+                              🔗 Buka Zoom
+                            </a>
+                          ) : (
+                            <span className="text-xs text-zinc-400 italic">Belum diset</span>
+                          )}
+                        </td>
                       </tr>
                     ))
                   ) : (
@@ -300,7 +326,7 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
         </div>
       )}
 
-      {/* Tab Content: Attendance (Absensi) */}
+      {/* Tab Content: Attendance */}
       {activeTab === 'attendance' && (
         <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 mb-2">Manajemen Absensi Murid & Guru</h3>
@@ -317,16 +343,13 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
         </div>
       )}
 
-      {/* Tab Content: Finance (SPP & Gaji Guru Interaktif) */}
+      {/* Tab Content: Finance */}
       {activeTab === 'finance' && (
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            {/* 1. INPUT PEMBAYARAN SPP MURID */}
             <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm h-fit">
               <h3 className="text-lg font-bold text-zinc-900 mb-2">Input Pembayaran SPP Murid</h3>
               <p className="text-zinc-500 text-sm mb-4">Catat atau perbarui status pembayaran SPP bulanan siswa.</p>
-              
               <form onSubmit={handleAddSpp} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 mb-1">Nama Siswa</label>
@@ -381,11 +404,9 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
               </form>
             </div>
 
-            {/* 2. INPUT PENGGAJIAN GURU / MENTOR */}
             <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm h-fit">
               <h3 className="text-lg font-bold text-zinc-900 mb-2">Input Gaji Guru / Mentor</h3>
               <p className="text-zinc-500 text-sm mb-4">Catat honorarium dan perbarui status pencairan gaji pengajar.</p>
-              
               <form onSubmit={handleAddSalary} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 mb-1">Nama Guru / Mentor</label>
@@ -438,45 +459,6 @@ export default function AdminDashboard({ tenantId = 'default-bimbel' }) {
                   {submitting ? 'Menyimpan...' : 'Simpan Data Gaji Guru'}
                 </button>
               </form>
-            </div>
-
-          </div>
-
-          {/* Ringkasan Status Keuangan Terkini */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-              <h3 className="text-lg font-bold text-zinc-900 mb-2">Riwayat Status SPP Murid</h3>
-              <p className="text-zinc-500 text-sm mb-4">Daftar pemantauan pembayaran bulanan siswa.</p>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-zinc-50 rounded-xl">
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-800">Ahmad Fauzan (SMA 12)</p>
-                    <p className="text-xs text-zinc-400">Februari 2026 - Rp 350.000</p>
-                  </div>
-                  <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-full">Lunas</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-zinc-50 rounded-xl">
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-800">Siti Rahma (SMP 9)</p>
-                    <p className="text-xs text-zinc-400">Februari 2026 - Rp 300.000</p>
-                  </div>
-                  <span className="text-xs bg-amber-100 text-amber-700 font-bold px-2.5 py-1 rounded-full">Pending</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-              <h3 className="text-lg font-bold text-zinc-900 mb-2">Riwayat Status Gaji Guru</h3>
-              <p className="text-zinc-500 text-sm mb-4">Daftar pencairan honorarium pengajar.</p>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-zinc-50 rounded-xl">
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-800">Budi Santoso, M.Pd</p>
-                    <p className="text-xs text-zinc-400">Februari 2026 - Rp 3.500.000</p>
-                  </div>
-                  <span className="text-xs bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1 rounded-full">Paid</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>

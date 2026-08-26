@@ -1,3 +1,4 @@
+// src/pages/Dashboard/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 
 export default function Dashboard({ tenantId = 'default-bimbel' }) {
@@ -104,7 +105,7 @@ export default function Dashboard({ tenantId = 'default-bimbel' }) {
       {activeTab === 'schedule' && (
         <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 mb-2">Jadwal Sesi Bimbel Anda</h3>
-          <p className="text-zinc-500 text-sm mb-6">Pastikan hadir tepat waktu pada sesi kelas online maupun offline.</p>
+          <p className="text-zinc-500 text-sm mb-6">Pastikan hadir tepat waktu pada sesi kelas online maupun offline. Klik tombol "Masuk Kelas" untuk langsung bergabung ke ruang Zoom.</p>
           <div className="space-y-4">
             {studentData?.schedules?.map((sch) => (
               <div key={sch.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-zinc-50 border border-zinc-200/60 rounded-xl gap-4">
@@ -119,12 +120,23 @@ export default function Dashboard({ tenantId = 'default-bimbel' }) {
                   <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
                     {sch.room}
                   </span>
-                  <button 
-                    onClick={() => alert(`Masuk ke ruang: ${sch.room}`)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
-                  >
-                    Masuk Kelas
-                  </button>
+                  {sch.zoomLink ? (
+                    <a 
+                      href={sch.zoomLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <span>🚀</span> Masuk Kelas
+                    </a>
+                  ) : (
+                    <button 
+                      onClick={() => alert(`Masuk ke ruang: ${sch.room}`)}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
+                    >
+                      Masuk Kelas
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
