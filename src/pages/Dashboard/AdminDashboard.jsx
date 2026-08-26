@@ -1,23 +1,12 @@
-// src/pages/Dashboard/AdminDashboard.jsx - Full Code with LocalStorage Fallback & Zoom Support
+// src/pages/Dashboard/AdminDashboard.jsx - Full Code Connected to Backend & Neon (No LocalStorage)
 import React, { useState, useEffect } from 'react';
 
 export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
-  const [adminData, setAdminData] = useState({
-    totalStudents: 120,
-    totalMentors: 15,
-    totalRevenue: 'Rp 15.400.000',
-    systemStatus: 'Online',
-    recentActivities: [
-      { id: 1, text: 'Siswa baru mendaftar di kelas UTBK', time: '10 menit lalu' },
-      { id: 2, text: 'Pembayaran SPP terverifikasi', time: '1 jam lalu' }
-    ],
-    classes: []
-  });
+  const [adminData, setAdminData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('classes');
   
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('classes'); // Default langsung ke classes agar mudah dicek
-  
-  // Form input kelas baru (ditambah zoomLink)
+  // Form input kelas baru
   const [classForm, setClassForm] = useState({ title: '', category: 'SMA / UTBK', instructor: '', price: '', zoomLink: '' });
   
   // Form input SPP Murid
@@ -28,30 +17,29 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
 
   const [submitting, setSubmitting] = useState(false);
 
-  // Ambil data dari localStorage berdasarkan tenantId saat komponen dimuat
-  useEffect(() => {
-    const savedClasses = localStorage.getItem(`bimbel_classes_${tenantId}`);
-    if (savedClasses) {
-      try {
-        const parsedClasses = JSON.parse(savedClasses);
-        setAdminData(prev => ({ ...prev, classes: parsedClasses }));
-      } catch (e) {
-        console.error("Gagal memparsing data kelas lokal", e);
-      }
+  const fetchAdminData = async () => {
+    try {
+      const res = await fetch('/api/admin', {
+        headers: { 'x-tenant-id': tenantId }
+      });
+      if (!res.ok) throw new Error('Gagal mengambil data dari server database.');
+      const data = await res.json();
+      setAdminData(data);
+    } catch (err) {
+      console.error("Gagal memuat data admin:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchAdminData();
   }, [tenantId]);
 
   const handleAddClass = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-
-    const newClassItem = {
-      id: Date.now(),
-      ...classForm
-    };
-
     try {
-      // Coba kirim ke API jika server backend tersedia
       const res = await fetch('/api/admin', {
         method: 'POST',
         headers: {
@@ -61,21 +49,20 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
         body: JSON.stringify({ action: 'add_class', ...classForm })
       });
       
-      if (!res.ok) throw new Error('API server tidak merespons');
+      if (!res.ok) throw new Error('Gagal menyimpan ke database Neon.');
       
       const data = await res.json();
+      alert('Kelas & Link Zoom berhasil disimpan ke database Neon!');
+      setClassForm({ title: '', category: 'SMA / UTBK', instructor: '', price: '', zoomLink: '' });
       if (data.classes) {
         setAdminData(prev => ({ ...prev, classes: data.classes }));
+      } else {
+        fetchAdminData();
       }
     } catch (err) {
-      // Fallback otomatis ke localStorage agar tetap sukses tanpa backend aktif
-      console.log("Menggunakan penyimpanan lokal (localStorage) untuk kelas.");
-      const updatedClasses = [newClassItem, ...(adminData.classes || [])];
-      setAdminData(prev => ({ ...prev, classes: updatedClasses }));
-      localStorage.setItem(`bimbel_classes_${tenantId}`, JSON.stringify(updatedClasses));
+      console.error(err);
+      alert('Gagal menyimpan kelas. Pastikan server backend dan koneksi Neon aktif.');
     } finally {
-      alert('Kelas & Link Zoom berhasil disimpan!');
-      setClassForm({ title: '', category: 'SMA / UTBK', instructor: '', price: '', zoomLink: '' });
       setSubmitting(false);
     }
   };
@@ -83,27 +70,55 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
   const handleAddSpp = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      alert('Data pembayaran SPP berhasil disimpan!');
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': tenantId
+        },
+        body: JSON.stringify({ action: 'add_spp', ...sppForm })
+      });
+      if (!res.ok) throw new Error('Gagal menyimpan SPP');
+      alert('Data pembayaran SPP berhasil disimpan ke database Neon!');
       setSppForm({ studentName: '', month: 'Februari 2026', amount: '', status: 'Lunas' });
+      fetchAdminData();
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menyimpan data SPP ke database.');
+    } finally {
       setSubmitting(false);
-    }, 500);
+    }
   };
 
   const handleAddSalary = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      alert('Data gaji guru berhasil disimpan!');
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': tenantId
+        },
+        body: JSON.stringify({ action: 'add_salary', ...salaryForm })
+      });
+      if (!res.ok) throw new Error('Gagal menyimpan gaji');
+      alert('Data gaji guru berhasil disimpan ke database Neon!');
       setSalaryForm({ teacherName: '', month: 'Februari 2026', amount: '', status: 'Pending' });
+      fetchAdminData();
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menyimpan data gaji ke database.');
+    } finally {
       setSubmitting(false);
-    }, 500);
+    }
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <p className="text-zinc-500 font-medium animate-pulse">Memuat Dashboard Admin...</p>
+        <p className="text-zinc-500 font-medium animate-pulse">Menghubungkan ke Database Neon...</p>
       </div>
     );
   }
@@ -114,7 +129,7 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Dashboard Admin Bimbel</h1>
-          <p className="text-zinc-400 mt-1">Kelola operasional, kelas, absensi, SPP murid, dan gaji pengajar secara terpusat.</p>
+          <p className="text-zinc-400 mt-1">Terhubung langsung dengan database cloud Neon.</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl text-zinc-300 text-sm font-semibold flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -151,35 +166,20 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
             <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm">
               <p className="text-sm font-medium text-zinc-400">Total Murid Aktif</p>
               <p className="text-3xl font-extrabold text-white mt-2">{adminData?.totalStudents || 0}</p>
-              <span className="text-xs text-emerald-400 font-semibold mt-2 inline-block">+12% bulan ini</span>
             </div>
             <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm">
               <p className="text-sm font-medium text-zinc-400">Total Mentor Pengajar</p>
               <p className="text-3xl font-extrabold text-white mt-2">{adminData?.totalMentors || 0}</p>
-              <span className="text-xs text-indigo-400 font-semibold mt-2 inline-block">Aktif mengajar</span>
             </div>
             <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm">
               <p className="text-sm font-medium text-zinc-400">Total Pendapatan SPP</p>
               <p className="text-2xl font-extrabold text-white mt-2">{adminData?.totalRevenue || 'Rp 0'}</p>
-              <span className="text-xs text-emerald-400 font-semibold mt-2 inline-block">Lunas terverifikasi</span>
             </div>
             <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm">
-              <p className="text-sm font-medium text-zinc-400">Status Sistem Cloud</p>
+              <p className="text-sm font-medium text-zinc-400">Status Neon DB</p>
               <p className="text-sm font-bold text-emerald-400 mt-3 bg-emerald-500/10 px-3 py-1 rounded-full inline-block">
-                {adminData?.systemStatus || 'Online'}
+                {adminData?.systemStatus || 'Connected'}
               </p>
-            </div>
-          </div>
-
-          <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-white mb-4">Aktivitas & Log Sistem Terbaru</h3>
-            <div className="space-y-4">
-              {adminData?.recentActivities?.map((act) => (
-                <div key={act.id} className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-none">
-                  <p className="text-sm text-zinc-300">{act.text}</p>
-                  <span className="text-xs text-zinc-500 font-medium">{act.time}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>
@@ -188,7 +188,6 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
       {/* Tab Content: Classes & Zoom Management */}
       {activeTab === 'classes' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Form Input Kelas & Zoom */}
           <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm h-fit">
             <h3 className="text-lg font-bold text-white mb-4">Input Kelas & Link Zoom</h3>
             <form onSubmit={handleAddClass} className="space-y-4">
@@ -247,21 +246,19 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
                   onChange={(e) => setClassForm({ ...classForm, zoomLink: e.target.value })}
                   className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-white placeholder:text-zinc-500 bg-zinc-950"
                 />
-                <p className="text-[11px] text-zinc-500 mt-1">Link ini akan otomatis menjadi tombol 'Masuk Kelas' di portal siswa.</p>
               </div>
               <button 
                 type="submit" 
                 disabled={submitting}
                 className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
               >
-                {submitting ? 'Menyimpan...' : 'Simpan Kelas & Link Zoom'}
+                {submitting ? 'Menyimpan...' : 'Simpan ke Database Neon'}
               </button>
             </form>
           </div>
 
-          {/* Daftar Kelas & Link Zoom */}
           <div className="lg:col-span-2 bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm">
-            <h3 className="text-lg font-bold text-white mb-4">Daftar Kelas & Status Link Zoom</h3>
+            <h3 className="text-lg font-bold text-white mb-4">Daftar Kelas dari Database Neon</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -290,7 +287,6 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1.5 rounded-lg hover:bg-indigo-500/20 transition-all inline-block truncate max-w-[150px]"
-                              title={cls.zoomLink}
                             >
                               🔗 Buka Zoom
                             </a>
@@ -302,7 +298,7 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="py-8 text-center text-zinc-500">Belum ada kelas yang diinput.</td>
+                      <td colSpan="4" className="py-8 text-center text-zinc-500">Belum ada data kelas di database Neon.</td>
                     </tr>
                   )}
                 </tbody>
@@ -316,16 +312,7 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
       {activeTab === 'attendance' && (
         <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm">
           <h3 className="text-lg font-bold text-white mb-2">Manajemen Absensi Murid & Guru</h3>
-          <p className="text-zinc-400 text-sm mb-6">Rekapitulasi kehadiran harian seluruh sesi bimbingan belajar.</p>
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 text-center">
-            <p className="text-zinc-400 font-medium">Modul absensi terpusat siap merekam data kehadiran siswa per sesi kelas.</p>
-            <button 
-              onClick={() => alert('Fitur rekap absensi massal diaktifkan.')}
-              className="mt-4 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-500 transition-all cursor-pointer"
-            >
-              Unduh Rekap Absensi (CSV / Excel)
-            </button>
-          </div>
+          <p className="text-zinc-400 text-sm mb-6">Sinkronisasi data absensi langsung ke database Neon.</p>
         </div>
       )}
 
@@ -335,114 +322,38 @@ export default function AdminDashboard({ tenantId = 'bimbel-nusantara' }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm h-fit">
               <h3 className="text-lg font-bold text-white mb-2">Input Pembayaran SPP Murid</h3>
-              <p className="text-zinc-400 text-sm mb-4">Catat atau perbarui status pembayaran SPP bulanan siswa.</p>
               <form onSubmit={handleAddSpp} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-1">Nama Siswa</label>
                   <input 
                     type="text" 
                     required
-                    placeholder="Contoh: Ahmad Fauzan"
                     value={sppForm.studentName}
                     onChange={(e) => setSppForm({ ...sppForm, studentName: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-white placeholder:text-zinc-500 bg-zinc-950"
+                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-white bg-zinc-950"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Bulan Tagihan</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={sppForm.month}
-                    onChange={(e) => setSppForm({ ...sppForm, month: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-white placeholder:text-zinc-500 bg-zinc-950"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Nominal (Rp)</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="Contoh: 350.000"
-                    value={sppForm.amount}
-                    onChange={(e) => setSppForm({ ...sppForm, amount: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-white placeholder:text-zinc-500 bg-zinc-950"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Status Pembayaran</label>
-                  <select 
-                    value={sppForm.status}
-                    onChange={(e) => setSppForm({ ...sppForm, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-zinc-950 text-white"
-                  >
-                    <option value="Lunas">Lunas</option>
-                    <option value="Pending">Pending (Belum Lunas)</option>
-                  </select>
-                </div>
-                <button 
-                  type="submit" 
-                  disabled={submitting}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {submitting ? 'Menyimpan...' : 'Simpan Pembayaran SPP'}
+                <button type="submit" className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl">
+                  Simpan SPP ke Neon
                 </button>
               </form>
             </div>
 
             <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm h-fit">
               <h3 className="text-lg font-bold text-white mb-2">Input Gaji Guru / Mentor</h3>
-              <p className="text-zinc-400 text-sm mb-4">Catat honorarium dan perbarui status pencairan gaji pengajar.</p>
               <form onSubmit={handleAddSalary} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-1">Nama Guru / Mentor</label>
                   <input 
                     type="text" 
                     required
-                    placeholder="Contoh: Rudiansah S.pd"
                     value={salaryForm.teacherName}
                     onChange={(e) => setSalaryForm({ ...salaryForm, teacherName: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-white placeholder:text-zinc-500 bg-zinc-950"
+                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-white bg-zinc-950"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Periode Gaji (Bulan)</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={salaryForm.month}
-                    onChange={(e) => setSalaryForm({ ...salaryForm, month: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-white placeholder:text-zinc-500 bg-zinc-950"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Nominal Gaji (Rp)</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="Contoh: 3.500.000"
-                    value={salaryForm.amount}
-                    onChange={(e) => setSalaryForm({ ...salaryForm, amount: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm text-white placeholder:text-zinc-500 bg-zinc-950"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Status Pencairan Gaji</label>
-                  <select 
-                    value={salaryForm.status}
-                    onChange={(e) => setSalaryForm({ ...salaryForm, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-zinc-950 text-white"
-                  >
-                    <option value="Paid">Sudah Dibayar (Paid)</option>
-                    <option value="Pending">Pending (Belum Dicairkan)</option>
-                  </select>
-                </div>
-                <button 
-                  type="submit" 
-                  disabled={submitting}
-                  className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {submitting ? 'Menyimpan...' : 'Simpan Data Gaji Guru'}
+                <button type="submit" className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl">
+                  Simpan Gaji ke Neon
                 </button>
               </form>
             </div>

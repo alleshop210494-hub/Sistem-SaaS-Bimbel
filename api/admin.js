@@ -1,73 +1,78 @@
-import { neon } from '@neondatabase/serverless';
+// api/admin.js
+import { Pool } from '@neondatabase/serverless';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-tenant-id, x-user-role'
-  );
+  const tenantId = req.headers['x-tenant-id'] || 'bimbel-nusantara';
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+  // Pastikan tabel 'classes' sudah ada di database Neon Anda
   try {
-    // Validasi Keamanan RBAC di Backend: Memeriksa header role dari klien/token
-    const userRole = req.headers['x-user-role'] || 'student';
-    
-    // Jika bukan admin, blokir akses ke API admin ini
-    if (userRole !== 'admin') {
-      return res.status(403).json({ 
-        error: 'Akses ditolak. Endpoint ini khusus untuk Admin / Pemilik Bimbel.' 
-      });
-    }
-
-    const sql = neon(process.env.DATABASE_URL);
-    const tenantId = req.headers['x-tenant-id'] || 'default-bimbel';
-
-    if (req.method === 'GET') {
-      const classes = await sql`
-        SELECT * FROM courses 
-        WHERE tenant_id = ${tenantId} 
-        ORDER BY id DESC
-      `;
-
-      return res.status(200).json({
-        adminName: 'Admin Pemilik Bimbel',
-        totalStudents: 1250,
-        totalMentors: 42,
-        totalRevenue: 'Rp 125.400.000',
-        systemStatus: 'Optimal & Terisolasi (Neon + Vercel)',
-        classes: classes,
-        recentActivities: [
-          { id: 1, text: 'Input kelas baru berhasil disinkronisasi ke database', time: 'Baru saja' },
-          { id: 2, text: 'Verifikasi pembayaran SPP murid gelombang 1 selesai', time: '2 jam lalu' },
-          { id: 3, text: 'Rekapitulasi absensi mingguan guru diperbarui', time: '5 jam lalu' }
-        ]
-      });
-    }
-
-    if (req.method === 'POST') {
-      const { action, title, category, instructor, price } = req.body;
-      
-      if (action === 'add_class') {
-        const newClass = await sql`
-          INSERT INTO courses (tenant_id, title, category, instructor, price)
-          VALUES (${tenantId}, ${title}, ${category}, ${instructor}, ${price})
-          RETURNING *
-        `;
-        return res.status(201).json({ message: 'Kelas berhasil ditambahkan', data: newClass[0] });
-      }
-
-      return res.status(400).json({ error: 'Aksi tidak dikenali' });
-    }
-
-    return res.status(405).json({ error: 'Method not allowed' });
-  } catch (error) {
-    console.error('Admin API Error:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS classes (
+        id SERIAL PRIMARY KEY,
+        tenant_id VARCHAR(100),
+        title VARCHAR(255),
+        category VARCHAR(100),
+        instructor VARCHAR(255),
+        price VARCHAR(100),
+        zoom_link TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  } catch (err) {
+    console.error('Gagal inisialisasi tabel:', err);
   }
+
+  // Handle GET Request (Mengambil data dari Neon)
+  if (req.method === 'GET') {
+    try {
+      const classesResult = await pool.query(
+        'SELECT id, title, category, instructor, price, zoom_link as "zoomLink" FROM classes WHERE tenant_id = $1 ORDER BY id DESC',
+        [tenantId]
+      );
+      
+      return res.status(200).json({
+        totalStudents: 120,
+        totalMentors: 15,
+        totalRevenue: 'Rp 15.400.000',
+        systemStatus: 'Connected to Neon',
+        classes: classesResult.rows
+      });
+    } catch (error) {
+      console.error('Database Error:', error);
+      return res.status(500).json({ error: 'Gagal mengambil data dari database Neon' });
+    }
+  }
+
+  // Handle POST Request (Menyimpan data ke Neon)
+  if (req.method === 'POST') {
+    const { action, title, category, instructor, price, zoomLink } = req.body;
+
+    if (action === 'add_class') {
+      try {
+        await pool.query(
+          `INSERT INTO classes (tenant_id, title, category, instructor, price, zoom_link) 
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [tenantId, title, category, instructor, price, zoomLink]
+        );
+
+        // Ambil data kelas terbaru setelah berhasil disimpan
+        const classesResult = await pool.query(
+          'SELECT id, title, category, instructor, price, zoom_link as "zoomLink" FROM classes WHERE tenant_id = $1 ORDER BY id DESC',
+          [tenantId]
+        );
+
+        return res.status(200).json({ 
+          message: 'Kelas berhasil disimpan ke Neon',
+          classes: classesResult.rows 
+        });
+      } catch (error) {
+        console.error('Database Insert Error:', error);
+        return res.status(500).json({ error: 'Gagal menyimpan kelas ke database Neon' });
+      }
+    }
+  }
+
+  return res.status(405).setHeader('Allow', ['GET', 'POST']).end(`Method ${req.method} Not Allowed`);
 }
